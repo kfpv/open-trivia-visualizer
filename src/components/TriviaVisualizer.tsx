@@ -84,7 +84,7 @@ export function TriviaVisualizer() {
           <CardHeader>
             <CardTitle>Questions by Category</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pl-1">
             <CategoryBarChart data={categoryData} />
           </CardContent>
         </Card>

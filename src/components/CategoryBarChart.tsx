@@ -1,6 +1,7 @@
 "use client"
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import { useEffect, useState } from "react"
+import { Bar, BarChart, CartesianGrid, Text, XAxis, YAxis } from "recharts"
 import {
     type ChartConfig,
     ChartContainer,
@@ -8,27 +9,65 @@ import {
     ChartTooltipContent,
 } from "@/components/ui/chart"
 
-export function CategoryBarChart({ data }: { data: Array<{ key: string; count: number }> }) {
-    const config: ChartConfig = {
-        ...Object.fromEntries(
-            data.map((item) => [
-                item.key,
-                {
-                    label: item.key,
-                },
-            ])
-        ),
-    }
+function useMobile() {
+    const [isMobile, setIsMobile] = useState(() =>
+        !window.matchMedia("(min-width: 640px)").matches
+    )
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia("(min-width: 640px)")
+        const updateMobile = (e: MediaQueryListEvent) => {
+            const isMobileView = !e.matches
+            setIsMobile(isMobileView)
+        }
+        mediaQuery.addEventListener("change", updateMobile)
+        return () => mediaQuery.removeEventListener("change", updateMobile)
+    }, [])
+
+    return isMobile
+}
+
+function WrappedYAxisTick({ x = 0, y = 0, payload, maxWidth }: { x?: number; y?: number; payload?: any; maxWidth: number }) {
+    const value = payload?.value ?? ""
+    if (!value) return null
     return (
-        <ChartContainer config={config}>
+        <Text
+            x={x}
+            y={y}
+            width={maxWidth}
+            textAnchor="end"
+            verticalAnchor="middle"
+            style={{ fontSize: 12, lineHeight: 1.2 }}
+        >
+            {String(value)}
+        </Text>
+    )
+}
+
+export function CategoryBarChart({ data }: { data: Array<{ key: string; count: number }> }) {
+    const isMobile = useMobile()
+    const yAxisWidth = isMobile ? 120 : 190
+
+    const config = data.reduce<ChartConfig>((acc, item) => {
+        acc[item.key] = { label: item.key }
+        return acc
+    }, {})
+
+    return (
+        <ChartContainer
+            config={config}
+            style={{ "--bar-count": data.length } as React.CSSProperties}
+            className="!aspect-auto
+             h-[calc(var(--bar-count)*var(--bar-size)+50px)]
+             [--bar-size:45px]
+             md:[--bar-size:35px]
+             "
+        >
             <BarChart
                 accessibilityLayer
                 data={data}
                 layout="vertical"
-
-                margin={{
-                    left: -20,
-                }}
+                margin={{ left:0 }}
             >
                 <XAxis
                     type="number"
@@ -36,14 +75,15 @@ export function CategoryBarChart({ data }: { data: Array<{ key: string; count: n
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={(value) => value.toLocaleString()}
+                    domain={isMobile ? [0, Math.max(...data.map(item => item.count), 0)] : undefined}
                 />
                 <YAxis
                     dataKey="key"
                     type="category"
                     tickLine={false}
-                    tickMargin={10}
                     axisLine={false}
-                    tickFormatter={(value) => value.slice(0, 3)}
+                    tick={(props) => <WrappedYAxisTick {...props} maxWidth={yAxisWidth} />}
+                    width={yAxisWidth}
                 />
                 <CartesianGrid horizontal={false} />
                 <ChartTooltip
@@ -55,7 +95,8 @@ export function CategoryBarChart({ data }: { data: Array<{ key: string; count: n
                         />
                     }
                 />
-                <Bar dataKey="count" fill="var(--chart-1)" radius={5} />
+                <Bar dataKey="count" fill="var(--chart-1)" radius={5}>
+                </Bar>
             </BarChart>
         </ChartContainer>
     )
