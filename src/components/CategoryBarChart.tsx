@@ -72,7 +72,7 @@ export function CategoryBarChart({
             className="!aspect-auto
              h-[calc(var(--bar-count)*var(--bar-size)+50px)]
              [--bar-size:45px]
-             md:[--bar-size:35px]
+             sm:[--bar-size:35px]
              "
         >
             <BarChart
