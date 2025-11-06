@@ -1,5 +1,6 @@
 import { ModeToggle } from "@/components/mode-toggle"
 import { ThemeProvider } from "@/components/theme-provider"
+import { TriviaVisualizer } from "@/components/TriviaVisualizer"
 
 function App() {
   return (
@@ -11,10 +12,8 @@ function App() {
             <ModeToggle />
           </div>
         </header>
-        <main className="mx-auto max-w-5xl px-4 py-8">
-          <p>
-            Content placeholder
-          </p>
+        <main className="mx-auto max-w-5xl px-4 py-6">
+          <TriviaVisualizer />
         </main>
       </div>
     </ThemeProvider>
