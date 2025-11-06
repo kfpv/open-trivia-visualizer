@@ -44,7 +44,13 @@ function WrappedYAxisTick({ x = 0, y = 0, payload, maxWidth }: { x?: number; y?:
     )
 }
 
-export function CategoryBarChart({ data }: { data: Array<{ key: string; count: number }> }) {
+export function CategoryBarChart({ 
+    data, 
+    onCategoryClick 
+}: { 
+    data: Array<{ key: string; count: number }>
+    onCategoryClick?: (categoryName: string) => void
+}) {
     const isMobile = useMobile()
     const yAxisWidth = isMobile ? 120 : 190
 
@@ -52,6 +58,12 @@ export function CategoryBarChart({ data }: { data: Array<{ key: string; count: n
         acc[item.key] = { label: item.key }
         return acc
     }, {})
+
+    const handleBarClick = (data: any) => {
+        if (data?.key && onCategoryClick) {
+            onCategoryClick(data.key)
+        }
+    }
 
     return (
         <ChartContainer
@@ -95,7 +107,13 @@ export function CategoryBarChart({ data }: { data: Array<{ key: string; count: n
                         />
                     }
                 />
-                <Bar dataKey="count" fill="var(--chart-1)" radius={5}>
+                <Bar 
+                    dataKey="count" 
+                    fill="var(--chart-1)" 
+                    radius={5}
+                    onClick={handleBarClick}
+                    style={{ cursor: onCategoryClick ? 'pointer' : 'default' }}
+                >
                 </Bar>
             </BarChart>
         </ChartContainer>

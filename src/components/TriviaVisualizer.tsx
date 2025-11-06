@@ -13,6 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
+import { ArrowLeft } from 'lucide-react'
 import { CategoryBarChart } from '@/components/CategoryBarChart'
 import { DifficultyPieChart } from '@/components/DifficultyPieChart'
 import { useQuery } from '@tanstack/react-query'
@@ -66,7 +68,17 @@ export function TriviaVisualizer() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className={`flex items-center ${selectedCategoryId ? 'justify-between' : 'justify-end'}`}>
+        {selectedCategoryId && (
+          <Button
+            variant="outline"
+            onClick={() => setSelectedCategoryId(undefined)}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to All Categories
+          </Button>
+        )}
         <Select
           value={selectedCategoryId?.toString() || 'all'}
           onValueChange={(value) => setSelectedCategoryId(value === 'all' ? undefined : Number(value))}
@@ -91,7 +103,15 @@ export function TriviaVisualizer() {
             <CardTitle>Questions by Category</CardTitle>
           </CardHeader>
           <CardContent className="pl-1">
-            <CategoryBarChart data={categoryData} />
+            <CategoryBarChart
+              data={categoryData}
+              onCategoryClick={(categoryName) => {
+                const category = categories?.find(cat => cat.name === categoryName)
+                if (category) {
+                  setSelectedCategoryId(category.id)
+                }
+              }}
+            />
           </CardContent>
         </Card>
 
