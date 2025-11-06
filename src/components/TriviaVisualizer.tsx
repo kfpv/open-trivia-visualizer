@@ -24,15 +24,21 @@ export function TriviaVisualizer() {
     queryKey: ['trivia', 'categories'],
     queryFn: fetchCategories,
   })
-  const { data: questions, isLoading: questionsLoading, error: questionsError } = useQuery({
-    queryKey: ['trivia', 'questions', selectedCategoryId || 'all'],
-    queryFn: () => fetchQuestions(50, selectedCategoryId),
+
+  const { data: allQuestions, isLoading: questionsLoading, error: questionsError } = useQuery({
+    queryKey: ['trivia', 'questions'],
+    queryFn: () => fetchQuestions(50),
   })
+
+  const selectedCategory = categories?.find(cat => cat.id === selectedCategoryId);
+  const filteredQuestions = selectedCategory
+    ? allQuestions?.filter(q => q.category === selectedCategory.name) || []
+    : allQuestions || [];
 
   const isLoading = categoriesLoading || questionsLoading
   const error = categoriesError || questionsError
-  const categoryData = questions ? groupBy(questions, q => q.category).sort((a, b) => b.count - a.count) : []
-  const difficultyData = questions ? groupBy(questions, q => q.difficulty) : []
+  const categoryData = filteredQuestions ? groupBy(filteredQuestions, q => q.category).sort((a, b) => b.count - a.count) : []
+  const difficultyData = filteredQuestions ? groupBy(filteredQuestions, q => q.difficulty) : []
 
   if (isLoading) {
     return (
@@ -50,7 +56,7 @@ export function TriviaVisualizer() {
     )
   }
 
-  if (!questions || questions.length === 0) {
+  if (!filteredQuestions || filteredQuestions.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <p className="text-muted-foreground">No questions available</p>
