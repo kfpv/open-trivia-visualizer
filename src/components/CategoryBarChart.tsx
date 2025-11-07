@@ -70,7 +70,7 @@ export function CategoryBarChart({
             config={config}
             style={{ "--bar-count": data.length } as React.CSSProperties}
             className="!aspect-auto
-             h-[calc(var(--bar-count)*var(--bar-size)+50px)]
+             h-[calc(var(--bar-count)*var(--bar-size)+30px)]
              [--bar-size:45px]
              sm:[--bar-size:35px]
              "

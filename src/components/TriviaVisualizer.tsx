@@ -14,9 +14,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, AlertCircle } from 'lucide-react'
 import { CategoryBarChart } from '@/components/CategoryBarChart'
 import { DifficultyPieChart } from '@/components/DifficultyPieChart'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useQuery } from '@tanstack/react-query'
 import { fetchCategories, fetchQuestions, type Category } from '@/lib/api'
 
@@ -41,30 +42,7 @@ export function TriviaVisualizer() {
   const error = categoriesError || questionsError
   const categoryData = filteredQuestions ? groupBy(filteredQuestions, q => q.category).sort((a, b) => b.count - a.count) : []
   const difficultyData = filteredQuestions ? groupBy(filteredQuestions, q => q.difficulty) : []
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-destructive">Error loading data: {error.message}</p>
-      </div>
-    )
-  }
-
-  if (!filteredQuestions || filteredQuestions.length === 0) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-muted-foreground">No questions available</p>
-      </div>
-    )
-  }
+  const hasData = filteredQuestions && filteredQuestions.length > 0
 
   return (
     <div className="space-y-6">
@@ -74,6 +52,7 @@ export function TriviaVisualizer() {
             variant="outline"
             onClick={() => setSelectedCategoryId(undefined)}
             className="gap-2"
+            disabled={isLoading}
           >
             <ArrowLeft className="h-4 w-4" />
             Back to All Categories
@@ -82,6 +61,7 @@ export function TriviaVisualizer() {
         <Select
           value={selectedCategoryId?.toString() || 'all'}
           onValueChange={(value) => setSelectedCategoryId(value === 'all' ? undefined : Number(value))}
+          disabled={isLoading || !categories}
         >
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Select category" />
@@ -97,21 +77,40 @@ export function TriviaVisualizer() {
         </Select>
       </div>
 
+      {error && (
+        <Card className="border-destructive">
+          <CardContent>
+            <div className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-4 w-4" />
+              <p>Error loading data: {error.message}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Questions by Category</CardTitle>
           </CardHeader>
           <CardContent className="pl-1">
-            <CategoryBarChart
-              data={categoryData}
-              onCategoryClick={(categoryName) => {
-                const category = categories?.find(cat => cat.name === categoryName)
-                if (category) {
-                  setSelectedCategoryId(category.id)
-                }
-              }}
-            />
+            {isLoading ? (
+              <CategoryBarChartSkeleton />
+            ) : !hasData ? (
+              <div className="flex items-center justify-center min-h-[100px] text-muted-foreground">
+                <p>No questions available for this category</p>
+              </div>
+            ) : (
+              <CategoryBarChart
+                data={categoryData}
+                onCategoryClick={(categoryName) => {
+                  const category = categories?.find(cat => cat.name === categoryName)
+                  if (category) {
+                    setSelectedCategoryId(category.id)
+                  }
+                }}
+              />
+            )}
           </CardContent>
         </Card>
 
@@ -120,10 +119,39 @@ export function TriviaVisualizer() {
             <CardTitle>Questions by Difficulty</CardTitle>
           </CardHeader>
           <CardContent>
-            <DifficultyPieChart data={difficultyData} />
+            {isLoading ? (
+              <DifficultyPieChartSkeleton />
+            ) : !hasData ? (
+              <div className="flex items-center justify-center min-h-[250px] text-muted-foreground">
+                <p>No questions available for this category</p>
+              </div>
+            ) : (
+              <DifficultyPieChart data={difficultyData} />
+            )}
           </CardContent>
         </Card>
       </div>
+    </div>
+  )
+}
+
+function CategoryBarChartSkeleton() {
+  return (
+    <div className="pl-6 space-y-2">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="flex items-center gap-0.5">
+          <Skeleton className="h-4 w-[88px] sm:w-[158px]" />
+          <Skeleton className="h-[40px] sm:h-[30px] flex-1" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function DifficultyPieChartSkeleton() {
+  return (
+    <div className="flex items-center justify-center h-[250px] w-[250px] mx-auto">
+      <Skeleton className="h-[192px] w-[192px] rounded-full" />
     </div>
   )
 }
