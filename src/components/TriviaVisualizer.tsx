@@ -14,32 +14,76 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, AlertCircle } from 'lucide-react'
+import { ArrowLeft, AlertCircle, Loader2 } from 'lucide-react'
 import { CategoryBarChart } from '@/components/CategoryBarChart'
 import { DifficultyPieChart } from '@/components/DifficultyPieChart'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useQuery } from '@tanstack/react-query'
-import { fetchCategories, fetchQuestions, type Category } from '@/lib/api'
+import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
+import { fetchCategories, fetchQuestions, getSessionToken, type Category } from '@/lib/api'
 
 export function TriviaVisualizer() {
+  const queryClient = useQueryClient()
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>()
   const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useQuery<Category[]>({
     queryKey: ['trivia', 'categories'],
     queryFn: fetchCategories,
   })
 
-  const { data: allQuestions, isLoading: questionsLoading, error: questionsError } = useQuery({
-    queryKey: ['trivia', 'questions'],
-    queryFn: () => fetchQuestions(50),
+  const { data: sessionToken, isLoading: tokenLoading, error: tokenError } = useQuery({
+    queryKey: ['trivia', 'session-token'],
+    queryFn: getSessionToken,
+    staleTime: Infinity,
   })
 
+  const {
+    data,
+    error: questionsError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    status: questionsStatus,
+  } = useInfiniteQuery({
+    queryKey: ['trivia', 'questions', sessionToken],
+    queryFn: async () => {
+      if (!sessionToken) {
+        throw new Error('Session token not available')
+      }
+      return fetchQuestions(50, undefined, sessionToken)
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.length === 50) {
+        return allPages.length
+      }
+      return undefined
+    },
+    enabled: !!sessionToken,
+    staleTime: Infinity,
+    retry: (failureCount, error) => {
+      if (error instanceof Error) {
+        if (
+          error.message.includes('Token not found') ||
+          error.message.includes('Token empty')
+        ) {
+          queryClient.invalidateQueries({ queryKey: ['trivia', 'session-token'] })
+          return false
+        }
+        if (error.message.includes('No results')) {
+          return false
+        }
+      }
+      return failureCount < 3
+    },
+  })
+
+  const allQuestions = data?.pages.flat() ?? []
   const selectedCategory = categories?.find(cat => cat.id === selectedCategoryId);
   const filteredQuestions = selectedCategory
-    ? allQuestions?.filter(q => q.category === selectedCategory.name) || []
-    : allQuestions || [];
+    ? allQuestions.filter(q => q.category === selectedCategory.name)
+    : allQuestions;
 
-  const isLoading = categoriesLoading || questionsLoading
-  const error = categoriesError || questionsError
+  const isLoading = categoriesLoading || tokenLoading || questionsStatus === 'pending'
+  const error = categoriesError || tokenError || questionsError
   const categoryData = filteredQuestions ? groupBy(filteredQuestions, q => q.category).sort((a, b) => b.count - a.count) : []
   const difficultyData = filteredQuestions ? groupBy(filteredQuestions, q => q.difficulty) : []
   const hasData = filteredQuestions && filteredQuestions.length > 0
@@ -131,6 +175,27 @@ export function TriviaVisualizer() {
           </CardContent>
         </Card>
       </div>
+
+      {!isLoading && hasData && (
+        <p className="text-sm text-muted-foreground">
+          {allQuestions.length} entries.{' '}
+          {isFetchingNextPage ? (
+            <>
+              <Loader2 className="inline mr-1 h-3 w-3 animate-spin" />
+              Loading more...
+            </>
+          ) : hasNextPage ? (
+            <button
+              onClick={() => fetchNextPage()}
+              className="underline hover:no-underline cursor-pointer"
+            >
+              Load more
+            </button>
+          ) : (
+            'No more questions'
+          )}
+        </p>
+      )}
     </div>
   )
 }
