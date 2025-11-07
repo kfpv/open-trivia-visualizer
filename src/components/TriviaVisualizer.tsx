@@ -176,7 +176,7 @@ export function TriviaVisualizer() {
         </Card>
       </div>
 
-      {!isLoading && hasData && (
+      {!isLoading && (
         <p className="text-sm text-muted-foreground">
           {allQuestions.length} entries.{' '}
           {isFetchingNextPage ? (
