@@ -32,7 +32,7 @@ export function DifficultyPieChart({ data }: { data: Array<{ key: string; count:
     return (
         <ChartContainer
             config={config}
-            className="[&_.recharts-text]:fill-background mx-auto aspect-square max-h-[250px]"
+            className="[&_.recharts-text]:fill-background mx-auto w-[250px] h-[250px]"
         >
             <PieChart>
                 <ChartTooltip

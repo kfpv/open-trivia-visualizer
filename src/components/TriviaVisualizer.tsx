@@ -55,7 +55,7 @@ export function TriviaVisualizer() {
             disabled={isLoading}
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to All Categories
+            All Categories
           </Button>
         )}
         <Select
@@ -88,8 +88,8 @@ export function TriviaVisualizer() {
         </Card>
       )}
 
-      <div className="grid gap-6">
-        <Card>
+      <div className="flex flex-col lg:flex-row gap-6">
+        <Card className="lg:flex-1 lg:self-start">
           <CardHeader>
             <CardTitle>Questions by Category</CardTitle>
           </CardHeader>
@@ -114,11 +114,11 @@ export function TriviaVisualizer() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="lg:w-fit lg:flex-shrink-0 lg:self-start">
           <CardHeader>
             <CardTitle>Questions by Difficulty</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="w-full lg:w-fit">
             {isLoading ? (
               <DifficultyPieChartSkeleton />
             ) : !hasData ? (
