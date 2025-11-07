@@ -139,7 +139,7 @@ function CategoryBarChartSkeleton() {
   return (
     <div className="pl-6 space-y-2">
       {[...Array(5)].map((_, i) => (
-        <div key={i} className="flex items-center gap-0.5">
+        <div key={i} className="flex items-center gap-2">
           <Skeleton className="h-4 w-[88px] sm:w-[158px]" />
           <Skeleton className="h-[40px] sm:h-[30px] flex-1" />
         </div>
