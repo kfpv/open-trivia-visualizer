@@ -27,7 +27,7 @@ function useMobile() {
     return isMobile
 }
 
-function WrappedYAxisTick({ x = 0, y = 0, payload, maxWidth }: { x?: number; y?: number; payload?: any; maxWidth: number }) {
+function WrappedYAxisTick({ x = 0, y = 0, payload, maxWidth }: { x?: number; y?: number; payload?: { value?: string }; maxWidth: number }) {
     const value = payload?.value ?? ""
     if (!value) return null
     return (
@@ -39,7 +39,7 @@ function WrappedYAxisTick({ x = 0, y = 0, payload, maxWidth }: { x?: number; y?:
             verticalAnchor="middle"
             style={{ fontSize: 12, lineHeight: 1.2 }}
         >
-            {String(value)}
+            {value}
         </Text>
     )
 }
@@ -59,7 +59,7 @@ export function CategoryBarChart({
         return acc
     }, {})
 
-    const handleBarClick = (data: any) => {
+    const handleBarClick = (data: { key: string } | undefined) => {
         if (data?.key && onCategoryClick) {
             onCategoryClick(data.key)
         }
